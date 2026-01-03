@@ -10,7 +10,7 @@ import (
 )
 
 type Movie struct {
-	ID string `json:"id"` // Movie ID // cpaital letter males it publics
+	ID string `json:"id"` // Movie ID // capital letter makes it publics
 	Isbn string `json:"isbn"` // Movie ISBN number
 	Title string `json:"title"` // `json:"id"` (Struct Tag)->When converting this struct to JSON, use id instead of ID.”
 	Director *Director `json:"director"` // Pointer to Director struct
@@ -42,9 +42,11 @@ func deleteMovie(w http.ResponseWriter, r *http.Request){
 
 func createMovie(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-type", "application/json")
-	params := mux.Vars(r)
-	movies = append(movies,Movie{ID:params["id"],Isbn:params["isbn"],Title:params["title"],
-	Director:&Director{Firstname:params["firstname"],Lastname:params["lastname"]}})
+	var movie Movie
+	_ = json.NewDecoder(r.Body).Decode(&movie) //Decode needs a address to store the decoded data
+	movie.ID = strconv.Itoa(rand.Intn(100000000)) // Generate a random ID for the movie
+	movies = append(movies,movie)
+	json.NewEncoder(w).Encode(movie)
 }
 func getMovie(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Content-Type", "application/json") //👉 This line sets an HTTP response header.
@@ -55,6 +57,28 @@ func getMovie(w http.ResponseWriter, r *http.Request){
 			return
 		}
 	}
+}
+
+func updateMovie(w http.ResponseWriter, r *http.Request){
+	//set json content type
+	//params
+	//loop through movies , range
+	//delete the movie with the id that you have sent
+	//add a new movie - the movie that we send in the body of postman
+	//encode the movie to response
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	for i,item := range movies{
+		if item.ID == params["id"]{
+			movies = append(movies[:i],movies[i+1:]...)
+			var movie Movie
+			_ = json.NewDecoder(r.Body).Decode(&movie)
+			movie.ID = params["id"]
+			movies = append(movies,movie)
+			json.NewEncoder(w).Encode(movie)
+		}
+	}
+
 }
 func main(){
 	r := mux.NewRouter()
